@@ -1,4 +1,4 @@
-![CI](https://github.com/J4ck13Ch4n/K4-L3B-Cloud-Service-And-Deployment/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/J4ck13Ch4n/K4-L3B-DAY12-TranHuuDuc-2A202602459-CloudServicesAndDeployment/actions/workflows/ci.yml/badge.svg)
 
 # K4 — Level 3B, Ngày 12: Hạ Tầng Cloud & Deployment (240 phút)
 
