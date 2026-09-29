@@ -1,4 +1,4 @@
-# Secrets — KHÔNG BAO GIỜ commit
+# Secrets - KHONG BAO GIO commit
 .env
 *.pem
 *.key
@@ -21,5 +21,5 @@ Thumbs.db
 # Logs
 *.log
 
-# Tài liệu nội bộ của giảng viên — không đẩy lên repo phát cho học viên
+# Tai lieu noi bo cua giang vien - khong day len repo phat cho hoc vien
 solution/

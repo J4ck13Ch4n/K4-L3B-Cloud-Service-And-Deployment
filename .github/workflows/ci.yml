@@ -47,15 +47,30 @@ jobs:
         uses: actions/checkout@v4
       - name: Deploy to Railway
         env:
+          # Project token (Railway -> project Settings -> Tokens), stored as a GitHub secret
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          DEPLOY_API_KEY: ${{ secrets.DEPLOY_API_KEY }}
+          RAILWAY_SERVICE_ID: ae77f0f6-99f5-48e5-b99a-aab5f6d1d0ac
         run: |
-          echo "Deploying with Railway token from secrets..."
-          echo "Trigger deploy via Railway CLI or API (token from secrets, not hardcoded)"
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::warning::RAILWAY_TOKEN secret is not set - skipping deploy, smoke testing the current deployment only"
+            exit 0
+          fi
+          npm install -g @railway/cli@5.63.1
+          railway up --ci --service "$RAILWAY_SERVICE_ID"
       - name: Smoke test public URL
         env:
-          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+          PUBLIC_URL: ${{ vars.PUBLIC_URL || 'https://agent-production-9827.up.railway.app' }}
+          DEPLOY_API_KEY: ${{ secrets.DEPLOY_API_KEY }}
         run: |
-          echo "Smoke testing $PUBLIC_URL/health"
-          curl -f "$PUBLIC_URL/health"
-          curl -f "$PUBLIC_URL/ready"
+          echo "Smoke testing $PUBLIC_URL"
+          curl -fsS --retry 5 --retry-delay 10 --retry-all-errors "$PUBLIC_URL/health"
+          curl -fsS --retry 5 --retry-delay 10 --retry-all-errors "$PUBLIC_URL/ready"
+          # /ask without a key must be rejected
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$PUBLIC_URL/ask" \
+            -H 'Content-Type: application/json' -d '{"question":"ci"}')
+          [ "$code" = "401" ] || { echo "expected 401 without API key, got $code"; exit 1; }
+          if [ -n "$DEPLOY_API_KEY" ]; then
+            curl -fsS -X POST "$PUBLIC_URL/ask" -H 'Content-Type: application/json' \
+              -H "X-API-Key: $DEPLOY_API_KEY" -H 'X-User-Id: ci-smoke' \
+              -d '{"question":"ci smoke test"}'
+          fi
